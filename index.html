@@ -21,7 +21,20 @@ h1{margin:54px 0 10px;font-size:clamp(44px,7vw,82px);line-height:.95;letter-spac
 .start{margin-top:27px;padding:15px 42px;border:1px solid var(--green);border-radius:10px;background:#0b1713;color:var(--green);font-size:20px;font-weight:800;cursor:pointer;box-shadow:0 0 18px #00ff6644;transition:.2s;animation:pulseGlow 2.6s ease-in-out infinite}
 .start:hover{background:var(--green);color:#07100a;transform:translateY(-2px);box-shadow:0 0 34px #00ff66aa;animation:none}
 @keyframes pulseGlow{0%,100%{box-shadow:0 0 18px #00ff6644}50%{box-shadow:0 0 30px #00ff6677}}
-.start:disabled{opacity:.55;cursor:default}.lab{position:absolute;bottom:32px;width:min(620px,92vw);height:260px;text-align:center}.bench{position:absolute;bottom:0;left:5%;width:90%;height:16px;background:linear-gradient(#78828c,#303942);border-radius:7px}.emitter{position:absolute;top:0;left:calc(50% - 45px);width:90px;height:42px;border-radius:7px;background:linear-gradient(#8e969d,#434a50);border:2px solid #111;box-shadow:inset 0 0 7px #fff5}.lens{position:absolute;top:42px;left:calc(50% - 15px);width:30px;height:10px;background:#70ffab;border-radius:0 0 10px 10px}.beam{position:absolute;top:51px;left:calc(50% - 10px);width:20px;height:0;background:linear-gradient(90deg,transparent,#00ff66,#b6ffd0,#00ff66,transparent);box-shadow:0 0 20px #00ff66,0 0 48px #00ff66}.sample-wrap{position:absolute;bottom:38px;left:50%;width:360px;height:100px;transform:translateX(-50%)}.clamp{position:absolute;left:-20px;bottom:20px;width:42px;height:58px;background:linear-gradient(90deg,#222,#777);border:2px solid #080808;border-radius:4px}.sample{position:absolute;left:18px;bottom:50px;width:320px;height:24px;transform-origin:left center;background:linear-gradient(#303840 0 18%,#e2aa62 18% 42%,#1d1d1d 42% 100%);border:2px solid #020202;transition:1.5s cubic-bezier(.2,.8,.2,1);box-shadow:0 3px 8px #0008}.deformed{transform:rotate(-10deg) skewY(-7deg);border-radius:0 0 20px 140px}.labels{position:absolute;bottom:5px;width:100%;font-size:11px;color:#a9bac7;letter-spacing:.08em}.flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:20}.loading{display:none;position:absolute;bottom:12px;width:100%;text-align:center;color:var(--green);font-size:12px;letter-spacing:.15em}
+.start:disabled{opacity:.55;cursor:default}
+.lab{position:absolute;bottom:32px;width:min(620px,92vw);height:260px;text-align:center}
+.lab svg{width:100%;height:100%;display:block;overflow:visible}
+.beam-line{stroke:#00ff66;stroke-width:6;stroke-linecap:round;filter:drop-shadow(0 0 6px #00ff66) drop-shadow(0 0 16px rgba(0,255,102,.55))}
+.impact-spark{fill:#d4ffe6;filter:drop-shadow(0 0 10px #00ff66)}
+.emitter-rect{fill:url(#metalGrad);stroke:#111;stroke-width:2}
+.lens-rect{fill:#70ffab}
+.clamp-rect{fill:url(#clampGrad);stroke:#080808;stroke-width:2}
+.layer-steel{fill:none;stroke:#6b7580;stroke-width:5;stroke-linecap:round}
+.layer-adh{fill:none;stroke:#e2aa62;stroke-width:4;stroke-linecap:round}
+.layer-rubber{fill:none;stroke:#1d1d1d;stroke-width:8;stroke-linecap:round}
+.labels{position:absolute;bottom:5px;width:100%;font-size:11px;color:#a9bac7;letter-spacing:.08em}
+.flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:20}
+.loading{display:none;position:absolute;bottom:12px;width:100%;text-align:center;color:var(--green);font-size:12px;letter-spacing:.15em}
 @media(max-height:760px){h1{margin-top:25px}.lab{height:220px;bottom:14px}.start{margin-top:14px}}
 </style>
 </head>
@@ -34,30 +47,98 @@ h1{margin:54px 0 10px;font-size:clamp(44px,7vw,82px);line-height:.95;letter-spac
     <div class="ver">研究用予測ツール ・ v2.2</div>
     <button id="startButton" class="start" onclick="startApp()">▶ START SIMULATION</button>
   </div>
-  <div class="lab" aria-label="光照射による三層バイマテリアルの変形アニメーション">
-    <div class="emitter"></div><div class="lens"></div><div id="beam" class="beam"></div>
-    <div class="sample-wrap"><div class="clamp"></div><div id="sample" class="sample"></div></div>
+  <div class="lab" aria-label="光照射による三層バイマテリアルの湾曲変形アニメーション">
+    <svg id="labSvg" viewBox="0 0 400 190" preserveAspectRatio="xMidYMax meet">
+      <defs>
+        <linearGradient id="metalGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#9aa3ab"/>
+          <stop offset="1" stop-color="#434a50"/>
+        </linearGradient>
+        <linearGradient id="clampGrad" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stop-color="#222"/>
+          <stop offset="1" stop-color="#777"/>
+        </linearGradient>
+      </defs>
+      <rect class="emitter-rect" x="156" y="4" width="60" height="26" rx="7"></rect>
+      <rect class="lens-rect" x="176" y="30" width="20" height="8"></rect>
+      <line id="beam" class="beam-line" x1="186" y1="38" x2="186" y2="38" opacity="0"></line>
+      <circle id="impact" class="impact-spark" cx="186" cy="141" r="0" opacity="0"></circle>
+      <rect class="clamp-rect" x="20" y="130" width="26" height="40" rx="4"></rect>
+      <path id="layerSteel" class="layer-steel"></path>
+      <path id="layerAdh" class="layer-adh"></path>
+      <path id="layerRubber" class="layer-rubber"></path>
+    </svg>
     <div class="labels">CB/NR ・ CHLOROPRENE ADHESIVE ・ STAINLESS STEEL</div>
   </div>
   <div id="loading" class="loading">OPENING SIMULATOR...</div>
 </div>
 <div id="flash" class="flash"></div>
 <script>
+// geometry of the clamped bar: base is fixed at the clamp, tip curls upward toward the light
+const BASE_X=46, BASE_Y=150, BAR_L=300, STEPS=28, K_MAX=0.0022, CONTACT_Y=141;
+const layerSteel=document.getElementById('layerSteel');
+const layerAdh=document.getElementById('layerAdh');
+const layerRubber=document.getElementById('layerRubber');
+
+function barPath(off,k){
+  let d='';
+  for(let i=0;i<=STEPS;i++){
+    const s=BAR_L*i/STEPS;
+    const th=k*s;
+    let x,y;
+    if(Math.abs(k)<1e-6){x=s;y=0}else{x=Math.sin(th)/k;y=-(1-Math.cos(th))/k}
+    const nx=Math.sin(th),ny=Math.cos(th);
+    const px=BASE_X+x+off*nx, py=BASE_Y+y+off*ny;
+    d+=(i?'L':'M')+px.toFixed(2)+','+py.toFixed(2)+' ';
+  }
+  return d;
+}
+function updateBar(k){
+  layerSteel.setAttribute('d',barPath(-7,k));
+  layerAdh.setAttribute('d',barPath(-2,k));
+  layerRubber.setAttribute('d',barPath(4,k));
+}
+updateBar(0);
+
+function raf(duration,onFrame,onDone){
+  const t0=performance.now();
+  function step(now){
+    const p=Math.min(1,(now-t0)/duration);
+    onFrame(p);
+    if(p<1)requestAnimationFrame(step);else if(onDone)onDone();
+  }
+  requestAnimationFrame(step);
+}
+const easeOutQuad=p=>1-(1-p)*(1-p);
+const easeOutCubic=p=>1-Math.pow(1-p,3);
+
 function startApp(){
   const beam=document.getElementById('beam');
-  const sample=document.getElementById('sample');
+  const impact=document.getElementById('impact');
   const flash=document.getElementById('flash');
   const button=document.getElementById('startButton');
   button.disabled=true;
   button.textContent='SIMULATING...';
-  beam.animate([{height:'0px',opacity:.2},{height:'135px',opacity:1}],{duration:900,fill:'forwards',easing:'ease-out'});
-  setTimeout(()=>sample.classList.add('deformed'),950);
-  setTimeout(()=>{flash.style.transition='opacity .18s';flash.style.opacity='1'},2050);
+  // beam travels down and stops exactly at the bar's top surface (no penetration)
+  raf(600,p=>{
+    const e=easeOutQuad(p);
+    beam.setAttribute('y2',38+e*(CONTACT_Y-38));
+    beam.setAttribute('opacity',.25+.75*e);
+  },()=>{
+    // impact spark at the contact point
+    raf(420,p=>{
+      impact.setAttribute('r',2+p*15);
+      impact.setAttribute('opacity',1-p);
+    });
+    // the bar curls upward smoothly as it heats
+    raf(1000,p=>updateBar(K_MAX*easeOutCubic(p)));
+  });
+  setTimeout(()=>{flash.style.transition='opacity .18s';flash.style.opacity='1'},1850);
   setTimeout(()=>{
     document.getElementById('loading').style.display='block';
     flash.style.transition='opacity .45s';flash.style.opacity='0';
     window.location.href='photothermal_bimaterial_predictor_v2_1.html';
-  },2350);
+  },2150);
 }
 </script>
 </body>
