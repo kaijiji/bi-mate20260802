@@ -3,19 +3,24 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="光熱応答型バイマテリアル（CB/NR・SUS）の温度上昇と熱変形をリアルタイム予測する研究用シミュレーター。三層多層梁理論と実験校正に基づく。">
 <title>光熱バイマテリアル統合シミュレーター</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23081018'/%3E%3Ccircle cx='16' cy='16' r='9' fill='none' stroke='%2300e76f' stroke-width='2.5'/%3E%3C/svg%3E">
 <style>
 :root{--green:#60ffa0;--green2:#00e76f;--bg:#080d14;--panel:#101a24}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:#fff;font-family:Arial,"Yu Gothic UI",sans-serif;overflow:hidden}
 .screen{width:100vw;height:100vh;position:absolute;inset:0}
-#titleScreen{display:flex;flex-direction:column;align-items:center;background:radial-gradient(circle at 50% 80%,#17303b 0,#0b1119 42%,#05080d 100%)}
+#titleScreen{display:flex;flex-direction:column;align-items:center;background:radial-gradient(circle at 50% 80%,#17303b 0,#0b1119 42%,#05080d 100%);position:relative}
+#titleScreen::before{content:"";position:absolute;inset:0;background-image:linear-gradient(rgba(0,231,111,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(0,231,111,.05) 1px,transparent 1px);background-size:42px 42px;-webkit-mask-image:radial-gradient(circle at 50% 30%,#000 0%,transparent 72%);mask-image:radial-gradient(circle at 50% 30%,#000 0%,transparent 72%);pointer-events:none}
 .hero{text-align:center;z-index:3;padding:0 18px}
-h1{margin:54px 0 10px;font-size:clamp(44px,7vw,82px);line-height:.95;letter-spacing:2px;color:#f0f3f5;text-shadow:1px 1px #aaa,2px 2px #777,3px 3px #555,5px 5px #222,10px 10px #000}
+h1{margin:54px 0 10px;font-size:clamp(44px,7vw,82px);line-height:.95;letter-spacing:1px;font-weight:800;background:linear-gradient(135deg,#ffffff 5%,#c9f5dd 50%,#4dffa6 100%);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 34px rgba(0,231,111,.28))}
 .jp-title{margin-top:15px;font-size:clamp(18px,2.2vw,30px);font-weight:700;letter-spacing:.1em;color:#fff}
 .subtitle{margin-top:12px;color:var(--green);letter-spacing:clamp(2px,.5vw,5px);font-size:clamp(11px,1.4vw,17px)}
-.start{margin-top:27px;padding:15px 42px;border:1px solid var(--green);border-radius:8px;background:#0b1713;color:var(--green);font-size:20px;font-weight:800;cursor:pointer;box-shadow:0 0 18px #00ff6644;transition:.2s}
-.start:hover{background:var(--green);color:#07100a;transform:translateY(-2px);box-shadow:0 0 30px #00ff6688}
+.ver{margin-top:8px;color:#7a90a0;letter-spacing:.15em;font-size:11px}
+.start{margin-top:27px;padding:15px 42px;border:1px solid var(--green);border-radius:10px;background:#0b1713;color:var(--green);font-size:20px;font-weight:800;cursor:pointer;box-shadow:0 0 18px #00ff6644;transition:.2s;animation:pulseGlow 2.6s ease-in-out infinite}
+.start:hover{background:var(--green);color:#07100a;transform:translateY(-2px);box-shadow:0 0 34px #00ff66aa;animation:none}
+@keyframes pulseGlow{0%,100%{box-shadow:0 0 18px #00ff6644}50%{box-shadow:0 0 30px #00ff6677}}
 .start:disabled{opacity:.55;cursor:default}.lab{position:absolute;bottom:32px;width:min(620px,92vw);height:260px;text-align:center}.bench{position:absolute;bottom:0;left:5%;width:90%;height:16px;background:linear-gradient(#78828c,#303942);border-radius:7px}.emitter{position:absolute;top:0;left:calc(50% - 45px);width:90px;height:42px;border-radius:7px;background:linear-gradient(#8e969d,#434a50);border:2px solid #111;box-shadow:inset 0 0 7px #fff5}.lens{position:absolute;top:42px;left:calc(50% - 15px);width:30px;height:10px;background:#70ffab;border-radius:0 0 10px 10px}.beam{position:absolute;top:51px;left:calc(50% - 10px);width:20px;height:0;background:linear-gradient(90deg,transparent,#00ff66,#b6ffd0,#00ff66,transparent);box-shadow:0 0 20px #00ff66,0 0 48px #00ff66}.sample-wrap{position:absolute;bottom:38px;left:50%;width:360px;height:100px;transform:translateX(-50%)}.clamp{position:absolute;left:-20px;bottom:20px;width:42px;height:58px;background:linear-gradient(90deg,#222,#777);border:2px solid #080808;border-radius:4px}.sample{position:absolute;left:18px;bottom:50px;width:320px;height:24px;transform-origin:left center;background:linear-gradient(#303840 0 18%,#e2aa62 18% 42%,#1d1d1d 42% 100%);border:2px solid #020202;transition:1.5s cubic-bezier(.2,.8,.2,1);box-shadow:0 3px 8px #0008}.deformed{transform:rotate(-10deg) skewY(-7deg);border-radius:0 0 20px 140px}.labels{position:absolute;bottom:5px;width:100%;font-size:11px;color:#a9bac7;letter-spacing:.08em}.flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:20}.loading{display:none;position:absolute;bottom:12px;width:100%;text-align:center;color:var(--green);font-size:12px;letter-spacing:.15em}
 @media(max-height:760px){h1{margin-top:25px}.lab{height:220px;bottom:14px}.start{margin-top:14px}}
 </style>
@@ -26,6 +31,7 @@ h1{margin:54px 0 10px;font-size:clamp(44px,7vw,82px);line-height:.95;letter-spac
     <h1>PHOTOTHERMAL<br>BIMATERIAL</h1>
     <div class="jp-title">光熱バイマテリアル統合シミュレーター</div>
     <div class="subtitle">THERMO-MECHANICAL PREDICTION PLATFORM</div>
+    <div class="ver">研究用予測ツール ・ v2.2</div>
     <button id="startButton" class="start" onclick="startApp()">▶ START SIMULATION</button>
   </div>
   <div class="lab" aria-label="光照射による三層バイマテリアルの変形アニメーション">
